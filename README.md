@@ -7,7 +7,7 @@ Project ini merupakan framework pengujian beban (Load Testing) otomatis untuk AP
 <img width="1880" height="913" alt="image" src="https://github.com/user-attachments/assets/4d79981c-8dac-4373-a0bf-c146f97732f1" />
 
 
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/414654e8-fd18-4b22-a3f6-aa9e2748ecb3" />
+<img width="1886" height="872" alt="image" src="https://github.com/user-attachments/assets/d608e1de-6414-4d66-81ef-f7c7d8f2e1b5" />
 
 
 <img width="1917" height="925" alt="image" src="https://github.com/user-attachments/assets/3c961e22-8c6c-4a49-ae68-ac08f99dae81" />
