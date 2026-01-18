@@ -1,0 +1,245 @@
+Performance Testing of [Nama Aplikasi].
+
+Objective : Smoke Test, Load Test, dan Stress Test
+
+Test Scenario: Jelaskan jumlah VUs, durasi, dan jenis tes (Stress/Load).
+
+Analysis (Paling Penting): Ceritakan apa yang kamu temukan. "Saat 50 VUs, response time naik drastis menjadi 2 detik. Ini menunjukkan bottleneck pada DB query."
+
+Recommendation: Apa saranmu untuk tim developer?
+
+
+
+---
+
+Mari kita bedah cara berpikir kritis dalam menyusun test case performa dari nol, menggunakan studi kasus Petstore API.
+
+1. Tahap Observasi: Jangan Langsung Coding
+Sebelum menulis skrip k6, tanyakan 3 pertanyaan ini pada diri sendiri saat melihat API GET /pet/findByStatus:
+
+Siapa penggunanya? (Apakah aplikasi mobile, web, atau sistem internal?)
+
+Kapan trafik tinggi terjadi? (Apakah saat promo jam 12 malam atau saat jam kerja?)
+
+Apa yang paling krusial? (Data yang muncul harus akurat atau yang penting cepat?)
+
+
+2. Teknik "The 4 Layers of Performance Testing"
+Untuk membuat test case yang komprehensif, bagi pemikiran Mas ke dalam 4 lapisan ini:
+
+A. Layer Fungsional (Does it work?)
+Kritis: Jika sistem dipukul beban tinggi, apakah datanya masih benar?
+Test Case: "Memastikan status code tetap 200 dan JSON body mengandung field 'name' meskipun diakses 50 user sekaligus."
+
+B. Layer Sensitivitas Waktu (SLA/Thresholds)
+Kritis: Berapa lama user mau menunggu sebelum mereka menutup aplikasi?
+Test Case: "Menetapkan batas p(95) response time di 500ms. Jika lebih dari itu, tes dianggap gagal (failed)."
+
+C. Layer Kapasitas (The Breaking Point)
+Kritis: Di titik mana server mulai menyerah (error 500)?
+Test Case: "Meningkatkan user dari 1 ke 200 secara bertahap untuk mencari tahu kapan server mulai melambat atau crash."
+
+D. Layer Ketahanan (Reliability)
+Kritis: Jika sistem diberi beban stabil selama 1 jam, apakah memorinya bocor (memory leak)?
+Test Case: "Menjalankan 20 user konstan selama 10 menit dan memantau apakah ada kenaikan waktu respon secara perlahan."
+
+
+
+---
+4. Cara Analisis Hasil (Latihan Berpikir Kritis)
+Setelah Mas menjalankan k6 run script.js, jangan hanya melihat warna hijau/merah. Gunakan rumus "Why - So What":
+
+Temuan: http_req_duration p(95) adalah 800ms (Padahal target 500ms).
+
+Why (Kenapa?): Karena kita menggunakan endpoint findByStatus tanpa filter tambahan, sehingga payload JSON yang dikirim server terlalu besar.
+
+So What (Terus kenapa?): Jika dibiarkan, user dengan internet lambat akan mengalami timeout.
+
+Rekomendasi (Solusi): Berikan saran ke developer untuk menerapkan Pagination (membatasi jumlah data per halaman).
+
+----
+
+
+Melakukan observasi fitur di dalam aplikasi
+---
+Membuat test strategy
+untuk Test Strategy. Tidak semua fitur perlu di-load test.
+perlu pertimbangan sebelum memutuskan apa saja yang perlu di tes:
+
+Untuk menentukan fitur mana yang masuk ke tabel Performance Test Case, perlu menggunakan Risk-Based Approach (Pendekatan Berbasis Risiko).
+1.High Traffic (Sering diakses): Fitur yang paling banyak diklik user
+	a. Auth - CreateToken (sering)
+	b. Booking - CreateBooking (sering)
+	c. Booking - GetBookingIds (kadang)
+	d. Booking - GetBooking (sering)
+	e. Booking - UpdateBooking (kadang)
+	f. Booking - PartialUpdateBooking (kadang)
+	g. Booking - DeleteBooking (sering)
+	h. Ping - HealthCheck (sering)
+
+
+2.Resource Intensive (Berat di Server): Fitur yang melakukan tulis data (Write) / perubahan data pada database atau proses enkripsi
+	a. Auth - CreateToken (write karena proses enkripsi)
+	b. Booking - CreateBooking (write karena menambahkan data ke database)
+	d. Booking - GetBooking (tidak)
+	g. Booking - DeleteBooking (write karena menghapus data dari database)
+	h. Ping - HealthCheck (tidak / di abaikan karena cuma mengecek fiturnya menyala atau tidak)
+
+
+3.Business Critical (Sangat Penting): Jika fitur ini lemot/mati, bisnis berhenti
+	a. Auth - CreateToken (critical dari segi api )
+	b. Booking - CreateBooking (Critical dari segi bisnis)
+	g. Booking - DeleteBooking (tidak critical)
+
+---
+membuat test plan
+setelah mendapatkan ini 
+a. Auth - CreateToken (critical dari segi api )
+b. Booking - CreateBooking (Critical dari segi bisnis)
+
+selanjutnya kita akan membuat test plannya
+Dalam membuat Tabel Rencana Pengujian (Test Plan) untuk Performance Testing, seorang QA harus mempertimbangkan aspek yang lebih luas dari sekadar "jalan atau tidak".
+
+1. Apa yang Perlu Dipertimbangkan? (The Golden Rules)
+   QA harus menentukan 4 Parameter Utama ini:
+   	a. Workload Model (Model Beban): Berapa banyak user yang akan disimulasikan?
+	   ada 3 cara utama untuk menentukan jumlah Virtual Users (VUs):
+	   1. jika aplikasi sudah berjalan, kita bisa cari Berdasarkan Data Historis (Google Analytics/Server Log) dari perusahaan
+	      Rumus sederhana (Little's Law) :
+	      	VUs = (Average Daily Users / Detik dalam sehari) x Average Session Duration (dalam detik)
+		misal : Jika ada 10.000 user per hari, dan rata-rata orang buka aplikasi selama 2 menit (120 detik).
+
+		maka
+
+		VUs = (10.000 / 86.400) x 120 = 13.8 (Dibulatkan jadi 14-15 VUs)
+		untuk simulasi Peak Season kita bisa kalikan 2x atau 3x dari Vus.
+
+
+	   2. Jika aplikasi baru akan rilis, kita tanya ke tim Bisnis: "Berapa target user yang kita sasar?"
+		misal : Bisnis bilang "Kita mau sanggup menangani 500 transaksi booking per jam."
+		logika : jika 1 user = 30 detik = 1 transaksi
+			 maka, 1 user = 1 menit = 2 transaksi = 2 transaksi *60 menit = 120 transaksi perjam
+			 maka, kebutuhan Vus = 500 transaksi / 120 transaksi per user = 4.16 (dibulatkan jadi 5 Vus)
+
+	    
+           3. Jika tidak ada data, kita menggunakan pendekatan Eksploratif.
+		Caranya: Mulai dari angka kecil (misal 10 VUs), lalu naikkan perlahan (Step-up) sampai sistem mulai melambat atau error.
+
+
+
+	b. SLA (Service Level Agreement) / Thresholds: Di titik mana sistem dianggap "Gagal"?
+	   untuk enentukannya harus berdasarkan User Experience (UX) dan Business Risk.
+	   cara menentukan SLA/Thresholds secara profesional:
+		1. Gunakan Standar Industri (The 3-Second Rule)
+			a. < 500ms: Sangat Cepat (User merasa instan).
+			b. 500ms - 1s: Cepat (User menyadari ada jeda, tapi masih nyaman).
+			c. 1s - 3s: Mulai lambat (User mulai merasa bosan/ingin pindah tab).
+			d. > 3s: Gagal secara UX (User biasanya meninggalkan aplikasi).
+
+		2. Gunakan Percentile (p95 atau p99)
+			Ini artinya "95% (titik main aman) atau 99% (titik maksimal) pengguna Mangalami waktu respon di bawah angka X"
+
+		sehingga
+		 a. Auth - CreateToken (critical dari segi api )
+			p95 < 500ms (masuk kategori  < 500ms: Sangat Cepat (User merasa instan).
+			
+		 b. Booking - CreateBooking (Critical dari segi bisnis)
+			p95 < 800ms ( dengan catatan +300ms untuk jeda, ini masuk kategori 500ms - 1s: Cepat (User menyadari ada jeda, tapi masih nyaman).
+		C. Error Rate (Kebagalan Sistem)
+			rate < 1% (saya menentukan batas gagalnya)
+
+
+
+	c. Think Time: pertimbangkan jeda Waktu (misal 1-2 detik) di antara setiap aksi agar simulasi terlihat nyata.
+		tentukan random aja
+		a. Auth - CreateToken (2-3 detik) karena menginput data
+		b. Booking - CreateBooking (3-5 detik) karena menginput data
+	
+	
+	d. Test Environment: Catat bahwa pengujian dilakukan pada lingkungan mana?, dan keterbatasannya apa?
+		kita harus mencatat spesifikasi "target" (server yang ditembak) dan "injector" (laptop/mesin yang menjalankan k6).
+		1. Target System: https://restful-booker.herokuapp.com
+		2. Hosting Platform: Heroku (Public Cloud)
+		3. Location: Biasanya berbasis di US atau EU (AWS Region).
+		4. Injector Machine: Lenovo LOQ, RAM 32 GB, Koneksi Internet 50Mbps
+
+		keterbatasan
+		1. Shared Infrastructure	
+			Server Heroku ini bersifat publik dan dipakai banyak orang sekaligus.
+			Dampak : Hasil Response Time bisa fluktuatif (berubah-ubah) bukan karena kode kita jelek, tapi karena ada user 					lain yang juga sedang memakai server tersebut.
+		2.Network Latency	
+			Server berada di luar negeri (US/EU), sedangkan kita menembak dari Indonesia.
+			Dampak : Ada tambahan waktu (ping) sekitar 200ms-300ms murni karena jarak geografis. Mas harus mencatat ini agar 				 rekruter tahu bahwa 300ms itu bukan karena API lemot, tapi karena kabel bawah laut.
+
+		3. Network Latency	
+			Server berada di luar negeri (US/EU), sedangkan kita menembak dari Indonesia.
+			Dampak : Ada tambahan waktu (ping) sekitar 200ms-300ms murni karena jarak geografis. Mas harus mencatat ini agar 				rekruter tahu bahwa 300ms itu bukan karena API lemot, tapi karena kabel bawah laut.
+		4. Rate Limiting	
+			Platform Cloud biasanya memiliki Firewall yang membatasi request per detik.
+			Dampak : Jika kita memakai > 50 VUs, kemungkinan besar kita akan diblokir. Jadi, hasil tes pada beban tinggi 					 mungkin tidak valid karena yang kita tes adalah Firewall, bukan aplikasi.
+		5. Cold Start	
+			Server gratisan Heroku sering "tidur" jika tidak ada trafik.
+			Dampak : Request pertama biasanya sangat lambat (> 5 detik). Mas harus menyarankan melakukan "Warm-up" sebelum tes 				 dimulai.
+
+
+	e. Metode pengetesan
+		kita harus bisa membedakan kapan menggunakan Load Test, kapan Stress Test, dan kapan Spike Test.
+		cara : jangan test saat aplikasi live
+		1. Smoke Test						
+			Karakteristik Beban : Sangat rendah (1-2 VU)					
+			Tujuan Utama (Why) : Memastikan skrip tidak error dan API menyala.					
+		2. Load Test						
+			Karakteristik Beban : Beban rata-rata (Expected load)					
+			Tujuan Utama (Why) : Melihat performa sistem dalam kondisi normal.					
+		3. Stress Test						
+			Karakteristik Beban : Di atas rata-rata (Mencari titik hancur)					
+			Tujuan Utama (Why) : Mencari batas maksimal (breakpoint) server.					
+		4. Spike Test						
+			Karakteristik Beban : Lonjakan drastis dalam waktu singkat					
+			Tujuan Utama (Why) : Menguji ketahanan sistem terhadap serbuan mendadak.					
+		5. Soak Test						
+			Karakteristik Beban : Beban konstan dalam waktu lama (jam/hari)					
+			Tujuan Utama (Why) : Mencari kebocoran memori (memory leak).	
+
+
+
+---
+
+1. Cara Berpikir Kritis Membuat Test Case (Mindset Senior)
+Berpikirlah secara Sistematis dan Negatif:
+Cara Berpikir Kritis Membuat Test Case							
+	1. Data Variability (Variabilitas Data)						
+		Konsep: Pengujian menggunakan data yang berbeda-beda di setiap request					
+	2. Dependency (Ketergantungan)						
+		Konsep: Hubungan antara satu request dengan request lainnya dalam sebuah alur kerja.					
+	3. Boundary (Batasan)						
+		Konsep: Mengamati perilaku sistem di titik transisi atau batas waktu tertentu.					
+
+a.Data Variability: Apakah sistem melambat jika nama yang diinput sangat panjang atau mengandung karakter unik?
+b.Dependency: Jika Auth gagal di tengah jalan, apakah skrip berhenti dengan anggun atau terus membombardir server dengan request sampah? c.Boundary: Apakah p95 tetap terjaga di menit ke-1 dibandingkan menit ke-3? (Deteksi Memory Leak).	
+
+----
+
+
+Berikut adalah variasi test case yang umum digunakan dalam standar industri:
+1. Variasi Berdasarkan Karakteristik Beban (Load Profile)
+   -Positive Test Case (Happy Path): Menguji fitur dengan beban normal (sesuai SLA) untuk memastikan sistem berjalan stabil.
+   -Negative Test Case (Error Handling): Menguji bagaimana sistem merespons jika diberikan beban yang jauh melampaui kapasitas
+   -Edge Case: Menguji fitur tepat pada batas threshold.
+2. Variasi Berdasarkan "Payload" (Data Variability)
+   -Standard Payload: Mengirim data dengan ukuran normal
+   -Heavy Payload: Mengirim data dengan ukuran maksimal
+   -Unique vs Recurrent Data: Membandingkan hasil antara data yang selalu sama (menguji caching) vs data yang selalu unik (menguji database I/O murni).
+3. Variasi Berdasarkan Kondisi Lingkungan (Environmental Variation)
+   -Warm-up vs Cold-start: Menjalankan test case saat server baru saja menyala vs saat server sudah "panas" (sudah melayani banyak request).
+   -Network Throttling: Menguji fitur yang sama dengan simulasi koneksi internet yang berbeda (misal: simulasi koneksi 3G vs Fiber Optic) untuk melihat dampak network latency terhadap p95.
+
+
+		
+
+		
+
+
+
+
+

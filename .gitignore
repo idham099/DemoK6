@@ -1,0 +1,9 @@
+# Folder hasil test (opsional, biasanya hasil lokal tidak di-upload)
+Hasil_Test/
+*.mp4
+# Folder log atau temporary k6
+.k6/
+
+# System files
+Thumbs.db
+.DS_Store
