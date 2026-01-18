@@ -70,3 +70,8 @@ docker-compose up -d
 Jalankan_Semua_Test.bat
 ```
 
+### Menjalankan Skenario Tunggal
+    Jika ingin menjalankan satu test case secara manual:
+```bash
+k6 run -o influxdb=http://localhost:8086/k6 tc_pft_01_auth_positif.js
+```
