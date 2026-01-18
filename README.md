@@ -55,3 +55,18 @@ Jalankan InfluxDB dan Grafana menggunakan Docker Compose yang tersedia:
 docker-compose up -d
 ```
 * InfluxDB: Berjalan di port 8086 dengan database default k6.
+* Grafana: Berjalan di port 3000 (Akses: http://localhost:3000).
+
+### 3. Konfigurasi Dashboard Grafana
+  1. Buka Grafana.
+  2. Tambahkan Data Source: Pilih InfluxDB, URL: http://influxdb:8086, Database: k6.
+  3. Gunakan dashboard k6 yang sudah dikonfigurasi pada UID 38c97573-3577-4b24-80d7-f1c1fe614e1d.
+
+
+## 🏃 Cara Menjalankan Pengujian
+### Automasi Penuh (Recommended)
+  Cukup jalankan file batch untuk mengeksekusi ke-7 skenario secara berurutan dan membuka dashboard secara otomatis:
+```bash
+Jalankan_Semua_Test.bat
+```
+
