@@ -25,6 +25,7 @@ Project ini mengintegrasikan beberapa teknologi utama untuk mencapai hasil pengu
 
 ---
 
+
 ## 📋 Cakupan Pengujian (7 Test Cases)
 
 Framework ini mencakup skenario positif, negatif, dan pengujian alur kerja lengkap (End-to-End):
@@ -40,6 +41,7 @@ Framework ini mencakup skenario positif, negatif, dan pengujian alur kerja lengk
 | **TC-07** | E2E Negatif | Mencoba membuat reservasi tanpa token/cookie (Unauthorized). | 20 |
 
 ---
+
 
 ## 🚀 Panduan Instalasi & Persiapan
 
@@ -63,6 +65,7 @@ docker-compose up -d
   3. Gunakan dashboard k6 yang sudah dikonfigurasi pada UID 38c97573-3577-4b24-80d7-f1c1fe614e1d.
 
 
+
 ## 🏃 Cara Menjalankan Pengujian
 ### Automasi Penuh (Recommended)
   Cukup jalankan file batch untuk mengeksekusi ke-7 skenario secara berurutan dan membuka dashboard secara otomatis:
@@ -74,4 +77,24 @@ Jalankan_Semua_Test.bat
   Jika ingin menjalankan satu test case secara manual:
 ```bash
 k6 run -o influxdb=http://localhost:8086/k6 tc_pft_01_auth_positif.js
+```
+
+## 📊 Analisis & Metrik
+Setiap pengujian memantau metrik kritis melalui Grafana:
+* **http_req_duration**: Waktu respon latensi (SLA p(95)).
+* **http_req_failed**: Tingkat kegagalan request (Error Rate).
+* **VUs**: Jumlah pengguna virtual yang aktif secara bersamaan.
+
+## 📁 Struktur Folder
+```bash
+├── docker-compose.yml     # Konfigurasi InfluxDB & Grafana 
+├── Jalankan_Semua_Test.bat # Automasi eksekusi testing 
+├── tc_pft_01_auth...js    # Script Skenario 01
+├── tc_pft_02_auth...js    # Script Skenario 02
+├── tc_pft_03_book...js    # Script Skenario 03
+├── tc_pft_04_book...js    # Script Skenario 04
+├── tc_pft_05_book...js    # Script Skenario 05
+├── tc_pft_06_e2e...js     # Script Skenario 06
+├── tc_pft_07_e2e...js     # Script Skenario 07
+└── README.md              # Dokumentasi Project
 ```
