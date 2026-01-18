@@ -1,4 +1,4 @@
-# 🚀 Automated API Load Testing: Restful Booker Framework
+# 🚀 Automated Performance Testing: Restful Booker with k6
 
 Project ini merupakan framework pengujian beban (Load Testing) otomatis untuk API **Restful Booker** menggunakan ekosistem **k6, InfluxDB, dan Grafana**. Framework ini dirancang untuk mensimulasikan beban pengguna nyata, menganalisis performa server, dan memantau kesehatan infrastruktur melalui visualisasi real-time.
 
