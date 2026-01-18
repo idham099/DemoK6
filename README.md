@@ -4,6 +4,9 @@ Project ini merupakan framework pengujian beban (Load Testing) otomatis untuk AP
 
 ---
 
+<img width="1880" height="913" alt="image" src="https://github.com/user-attachments/assets/4d79981c-8dac-4373-a0bf-c146f97732f1" />
+
+
 
 <img width="1917" height="925" alt="image" src="https://github.com/user-attachments/assets/3c961e22-8c6c-4a49-ae68-ac08f99dae81" />
 
@@ -50,3 +53,5 @@ Pastikan sistem Anda sudah menginstall:
 Jalankan InfluxDB dan Grafana menggunakan Docker Compose yang tersedia:
 ```bash
 docker-compose up -d
+```
+* InfluxDB: Berjalan di port 8086 dengan database default k6.
