@@ -4,6 +4,13 @@ Project ini merupakan framework pengujian beban (Load Testing) otomatis untuk AP
 
 ---
 
+
+<img width="1917" height="925" alt="image" src="https://github.com/user-attachments/assets/3c961e22-8c6c-4a49-ae68-ac08f99dae81" />
+
+<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/fcf2af6e-41bb-4bf2-9a19-8ff3fc1241c6" />
+
+
+
 ## 🛠️ Tech Stack & Architecture
 
 Project ini mengintegrasikan beberapa teknologi utama untuk mencapai hasil pengujian yang akurat:
